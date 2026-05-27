@@ -36,8 +36,9 @@ export default function Board({
 
     const renderIcon = (src, size = '2rem') => {
         if (!src) return null;
-        if (src.startsWith('/') || src.startsWith('http')) {
-            return <img src={src} alt="" style={{ width: size, height: size, objectFit: 'contain', display: 'inline-block' }} />;
+        if (src.startsWith('/') || src.startsWith('http') || src.startsWith('./')) {
+            const imgSrc = src.startsWith('http') ? src : `${import.meta.env.BASE_URL}${src.replace(/^\.?\//, '')}`;
+            return <img src={imgSrc} alt="" style={{ width: size, height: size, objectFit: 'contain', display: 'inline-block' }} />;
         }
         return src;
     };

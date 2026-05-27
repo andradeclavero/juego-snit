@@ -3,8 +3,9 @@ import { gameData } from '../data/gameData';
 export default function CharacterSelection({ onSelect }) {
     const renderIcon = (src) => {
         if (!src) return null;
-        if (src.startsWith('/') || src.startsWith('http')) {
-            return <img src={src} alt="" style={{ width: '6rem', height: '6rem', objectFit: 'contain', margin: '0 auto' }} />;
+        if (src.startsWith('/') || src.startsWith('http') || src.startsWith('./')) {
+            const imgSrc = src.startsWith('http') ? src : `${import.meta.env.BASE_URL}${src.replace(/^\.?\//, '')}`;
+            return <img src={imgSrc} alt="" style={{ width: '6rem', height: '6rem', objectFit: 'contain', margin: '0 auto' }} />;
         }
         return src;
     };
@@ -12,7 +13,7 @@ export default function CharacterSelection({ onSelect }) {
     return (
         <div className="screen start-screen active">
             <img 
-                src="/Color_MinBienes.png" 
+                src={`${import.meta.env.BASE_URL}Color_MinBienes.png`} 
                 alt="Logo Ministerio de Bienes Nacionales" 
                 style={{ height: '80px', margin: '0 auto 1rem', display: 'block' }} 
             />

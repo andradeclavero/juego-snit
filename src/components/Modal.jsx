@@ -32,16 +32,18 @@ export default function Modal({
 
     const renderVisual = (src) => {
         if (!src) return null;
-        if (src.startsWith('/') || src.startsWith('http')) {
-            return <img src={src} alt="" className="visual-image" style={{ maxWidth: '100%', maxHeight: '250px', objectFit: 'contain', borderRadius: '12px', display: 'block' }} />;
+        if (src.startsWith('/') || src.startsWith('http') || src.startsWith('./')) {
+            const imgSrc = src.startsWith('http') ? src : `${import.meta.env.BASE_URL}${src.replace(/^\.?\//, '')}`;
+            return <img src={imgSrc} alt="" className="visual-image" style={{ maxWidth: '100%', maxHeight: '250px', objectFit: 'contain', borderRadius: '12px', display: 'block' }} />;
         }
         return src;
     };
 
     const renderIcon = (src) => {
         if (!src) return null;
-        if (src.startsWith('/') || src.startsWith('http')) {
-            return <img src={src} alt="" className="icon-image" style={{ width: '2rem', height: '2rem', objectFit: 'contain' }} />;
+        if (src.startsWith('/') || src.startsWith('http') || src.startsWith('./')) {
+            const imgSrc = src.startsWith('http') ? src : `${import.meta.env.BASE_URL}${src.replace(/^\.?\//, '')}`;
+            return <img src={imgSrc} alt="" className="icon-image" style={{ width: '2rem', height: '2rem', objectFit: 'contain' }} />;
         }
         return src;
     };
@@ -56,7 +58,7 @@ export default function Modal({
 
                 <div className="modal-body">
                     <div className="visual-section">
-                        <div className="illustration" style={levelData.illustration && (levelData.illustration.startsWith('/') || levelData.illustration.startsWith('http')) ? { padding: '10px', height: 'auto', width: 'fit-content', margin: '0 auto' } : {}}>
+                        <div className="illustration" style={levelData.illustration && (levelData.illustration.startsWith('/') || levelData.illustration.startsWith('http') || levelData.illustration.startsWith('./')) ? { padding: '10px', height: 'auto', width: 'fit-content', margin: '0 auto' } : {}}>
                             {renderVisual(levelData.illustration)}
                         </div>
                         <div className="map-preview">
@@ -107,7 +109,7 @@ export default function Modal({
                                 maxWidth: '100%',
                                 textAlign: 'center'
                             }}>
-                                <img src={selectedOption.image} alt="Opción seleccionada" style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain', borderRadius: '8px', display: 'block' }} />
+                                <img src={selectedOption.image.startsWith('http') ? selectedOption.image : `${import.meta.env.BASE_URL}${selectedOption.image.replace(/^\.?\//, '')}`} alt="Opción seleccionada" style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain', borderRadius: '8px', display: 'block' }} />
                             </div>
                         )}
                         <p>{successMsg || errorMsg}</p>
