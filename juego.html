@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Superpoderes Territoriales - Juego SNIT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #FF6B35;
+            --secondary: #F7931E;
+            --success: #00C896;
+            --error: #E63946;
+            --dark: #1A1A2E;
+            --light: #F8F9FA;
+            --map-green: #76B947;
+            --map-blue: #4A90E2;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0px, transparent 1px, transparent 2px, rgba(255,255,255,0.03) 3px),
+                repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0px, transparent 1px, transparent 2px, rgba(255,255,255,0.03) 3px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            animation: mapScroll 60s linear infinite;
+        }
+
+        @keyframes mapScroll {
+            0% { background-position: 0 0; }
+            100% { background-position: 50px 50px; }
+        }
+
+        .game-container {
+            width: 90%;
+            max-width: 1200px;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 24px;
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+        }
+
+        .screen {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* PANTALLA DE INICIO */
+        .start-screen {
+            padding: 60px 40px;
+            text-align: center;
+            background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+
+        h1 {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 3.5rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+            text-shadow: 3px 3px 0 rgba(0,0,0,0.1);
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: #6c757d;
+            margin-bottom: 50px;
+            font-weight: 500;
+        }
+
+        .character-selection {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            margin-top: 40px;
+        }
+
+        .character-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            width: 280px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 4px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .character-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+
+        .character-card:hover {
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .character-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .character-emoji {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            display: block;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .character-card:nth-child(2) .character-emoji {
+            animation-delay: 0.3s;
+        }
+
+        .character-name {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 1.8rem;
+            color: var(--dark);
+            margin-bottom: 10px;
+        }
+
+        .character-desc {
+            color: #6c757d;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* TABLERO DE JUEGO */
+        .board-screen {
+            padding: 40px;
+            background: linear-gradient(180deg, #f1f3f5 0%, #dee2e6 100%);
+            min-height: 600px;
+        }
+
+        .board-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .board-title {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 2.5rem;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .progress-path {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 900px;
+            margin: 60px auto;
+            position: relative;
+        }
+
+        .progress-path::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 10%;
+            right: 10%;
+            height: 4px;
+            background: #dee2e6;
+            z-index: 0;
+        }
+
+        .progress-line {
+            position: absolute;
+            top: 50%;
+            left: 10%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            z-index: 0;
+            transition: width 0.8s ease;
+            box-shadow: 0 0 20px rgba(255, 107, 53, 0.5);
+        }
+
+        .level-node {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: white;
+            border: 5px solid #dee2e6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .level-node.active {
+            border-color: var(--primary);
+            box-shadow: 0 0 30px rgba(255, 107, 53, 0.6);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .level-node.completed {
+            border-color: var(--success);
+            background: linear-gradient(135deg, #00C896, #00A878);
+        }
+
+        .level-node.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .level-number {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 1.5rem;
+            color: var(--dark);
+        }
+
+        .level-node.completed .level-number {
+            color: white;
+        }
+
+        .node-emoji {
+            font-size: 2.5rem;
+            position: absolute;
+            top: -20px;
+            animation: bounceOnNode 1.5s infinite;
+        }
+
+        @keyframes bounceOnNode {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        /* MODAL DE DESAFÍO */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .challenge-modal {
+            background: white;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 1000px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 30px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .modal-header h2 {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 2rem;
+        }
+
+        .modal-header .emoji {
+            font-size: 2.5rem;
+        }
+
+        .modal-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+
+        .visual-section {
+            background: #f8f9fa;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .illustration {
+            width: 100%;
+            height: 250px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .illustration::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0px, transparent 2px, transparent 4px, rgba(255,255,255,0.05) 6px);
+        }
+
+        .map-preview {
+            width: 100%;
+            height: 180px;
+            background: #e9ecef;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .map-preview::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                repeating-linear-gradient(0deg, rgba(0,0,0,0.05) 0px, transparent 1px, transparent 20px, rgba(0,0,0,0.05) 21px),
+                repeating-linear-gradient(90deg, rgba(0,0,0,0.05) 0px, transparent 1px, transparent 20px, rgba(0,0,0,0.05) 21px);
+        }
+
+        .context-section {
+            padding: 30px;
+        }
+
+        .context-text {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: var(--dark);
+            margin-bottom: 30px;
+            border-left: 5px solid var(--primary);
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: white;
+            border: 3px solid #dee2e6;
+            border-radius: 12px;
+            padding: 20px 25px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 500;
+            color: var(--dark);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .option-btn:hover {
+            border-color: var(--primary);
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .option-btn:hover::before {
+            left: 100%;
+        }
+
+        .option-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* FEEDBACK */
+        .feedback {
+            display: none;
+            padding: 30px;
+            margin: 20px 30px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            animation: slideDown 0.5s ease;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .feedback.active {
+            display: block;
+        }
+
+        .feedback.success {
+            background: linear-gradient(135deg, #00C896, #00A878);
+            color: white;
+        }
+
+        .feedback.error {
+            background: linear-gradient(135deg, #E63946, #D62828);
+            color: white;
+        }
+
+        .feedback-title {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            padding: 20px 30px 30px;
+        }
+
+        .btn {
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255, 107, 53, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        /* PANTALLA FINAL */
+        .final-screen {
+            padding: 60px 40px;
+            text-align: center;
+            background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .trophy {
+            font-size: 8rem;
+            margin-bottom: 30px;
+            animation: rotateIn 1s ease, float 3s infinite ease-in-out;
+        }
+
+        @keyframes rotateIn {
+            from { transform: rotate(-180deg) scale(0); }
+            to { transform: rotate(0) scale(1); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .final-message {
+            font-size: 1.5rem;
+            color: var(--dark);
+            margin-bottom: 40px;
+            line-height: 1.8;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: var(--primary);
+            position: absolute;
+            animation: confettiFall 3s linear;
+        }
+
+        @keyframes confettiFall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            .character-selection { flex-direction: column; align-items: center; }
+            .modal-body { grid-template-columns: 1fr; }
+            .progress-path { flex-direction: column; gap: 40px; }
+            .progress-path::before { display: none; }
+            .level-node { width: 80px; height: 80px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- PANTALLA DE INICIO -->
+        <div id="startScreen" class="screen active start-screen">
+            <h1>🗺️ Superpoderes Territoriales</h1>
+            <p class="subtitle">Usa el poder de los mapas para resolver problemas cotidianos</p>
+            
+            <div class="character-selection">
+                <div class="character-card" onclick="selectCharacter('tito')">
+                    <span class="character-emoji">🚲</span>
+                    <h3 class="character-name">Tito</h3>
+                    <p class="character-desc">El Ciclista - Movilidad activa y topografía urbana</p>
+                </div>
+                
+                <div class="character-card" onclick="selectCharacter('lupe')">
+                    <span class="character-emoji">🛵</span>
+                    <h3 class="character-name">Lupe</h3>
+                    <p class="character-desc">Misión Express - Logística y datos en tiempo real</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABLERO DE JUEGO -->
+        <div id="boardScreen" class="screen board-screen">
+            <div class="board-header">
+                <h2 class="board-title">
+                    <span id="characterEmoji">🚲</span>
+                    <span id="characterName">Tito el Ciclista</span>
+                </h2>
+            </div>
+
+            <div class="progress-path">
+                <div class="progress-line" id="progressLine" style="width: 0%"></div>
+                
+                <div class="level-node active" id="node1" onclick="openChallenge(1)">
+                    <span class="node-emoji" id="emoji1">🚲</span>
+                    <span class="level-number">1</span>
+                </div>
+
+                <div class="level-node locked" id="node2" onclick="openChallenge(2)">
+                    <span class="level-number">2</span>
+                </div>
+
+                <div class="level-node locked" id="node3" onclick="openChallenge(3)">
+                    <span class="level-number">3</span>
+                </div>
+
+                <div class="level-node locked" id="nodeFinal" onclick="showFinalScreen()">
+                    <span class="level-number">🏁</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANTALLA FINAL -->
+        <div id="finalScreen" class="screen final-screen">
+            <div class="trophy">🏆</div>
+            <h1>¡Felicitaciones!</h1>
+            <p class="final-message">
+                Has completado todos los desafíos usando la <strong>inteligencia territorial</strong>. 
+                Los mapas y datos geoespaciales son superpoderes que nos ayudan a tomar mejores 
+                decisiones en la vida cotidiana.
+            </p>
+            <div>
+                <button class="btn btn-primary" onclick="resetGame()">🎮 Jugar de Nuevo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE DESAFÍO -->
+    <div id="modalOverlay" class="modal-overlay">
+        <div class="challenge-modal">
+            <div class="modal-header">
+                <span class="emoji" id="modalEmoji">🚲</span>
+                <h2 id="modalTitle">Desafío</h2>
+            </div>
+
+            <div class="modal-body">
+                <div class="visual-section">
+                    <div class="illustration" id="illustration">
+                        🏔️
+                    </div>
+                    <div class="map-preview">
+                        📍 Santiago, Chile
+                    </div>
+                </div>
+
+                <div class="context-section">
+                    <div class="context-text" id="contextText">
+                        Contexto del desafío...
+                    </div>
+
+                    <div class="options" id="optionsContainer">
+                        <!-- Las opciones se generan dinámicamente -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="feedback" id="feedback">
+                <div class="feedback-title" id="feedbackTitle">
+                    <span id="feedbackIcon">✓</span>
+                    <span id="feedbackTitleText">¡Correcto!</span>
+                </div>
+                <p id="feedbackText">Explicación...</p>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
+                <button class="btn btn-primary" id="continueBtn" style="display: none;" onclick="continueGame()">Continuar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DATOS DEL JUEGO
+        const gameData = {
+            tito: [
+                {
+                    title: "El cerro agotador",
+                    emoji: "🏔️",
+                    illustration: "🚴‍♂️",
+                    context: "Tito debe ir al sector oriente. Está cansado y la ruta recta parece tener subidas muy pronunciadas. ¿Qué debería hacer?",
+                    options: [
+                        { text: "Ir en línea recta arriesgándose a caminar con la bici", correct: false },
+                        { text: "Seguir a ciclistas deportivos de alto rendimiento", correct: false },
+                        { text: "Activar la capa de relieve (topografía) para buscar la ruta más plana", correct: true }
+                    ],
+                    successMessage: "¡Excelente! Los mapas de elevación te permiten visualizar el terreno antes de salir. Así puedes elegir rutas más amigables según tu nivel de energía. La topografía es un superpoder para ciclistas urbanos.",
+                    errorMessage: "Esa decisión podría agotarte o ponerte en riesgo. Los mapas topográficos muestran las elevaciones del terreno, ayudándote a elegir la mejor ruta según tus condiciones físicas."
+                },
+                {
+                    title: "La ruta segura",
+                    emoji: "🚦",
+                    illustration: "🚗",
+                    context: "Tito debe cruzar la ciudad en hora punta con tráfico denso y autos rápidos. Le preocupa su seguridad en la vía principal.",
+                    options: [
+                        { text: "Ir por la vereda esquivando peatones", correct: false },
+                        { text: "Pegarse a un bus grande para protegerse", correct: false },
+                        { text: "Consultar el visor oficial para conectar calles con ciclovías exclusivas", correct: true }
+                    ],
+                    successMessage: "¡Perfecto! Las capas de infraestructura ciclista en los visores oficiales muestran ciclovías, ciclobandas y calles tranquilas. Planificar tu ruta con estos datos te mantiene seguro.",
+                    errorMessage: "Esas opciones son peligrosas para ti y para otros. Los sistemas de información geográfica oficiales muestran la infraestructura ciclista disponible, permitiéndote planificar rutas seguras."
+                },
+                {
+                    title: "El bache oculto",
+                    emoji: "⚠️",
+                    illustration: "🕳️",
+                    context: "Tito casi se accidenta por un hoyo profundo y peligroso que no estaba señalizado en su ruta habitual. ¿Qué debería hacer?",
+                    options: [
+                        { text: "Dejar una rama grande en el hoyo para señalizarlo", correct: false },
+                        { text: "Esperar a que la municipalidad lo descubra por sí sola", correct: false },
+                        { text: "Usar una app de mapas colaborativos para marcar la ubicación del peligro", correct: true }
+                    ],
+                    successMessage: "¡Genial! Los Sistemas de Información Geográfica participativos permiten a la ciudadanía reportar problemas geolocalizados. Tus alertas ayudan a otros ciclistas y aceleran las reparaciones.",
+                    errorMessage: "Esas soluciones no son efectivas. Las plataformas de mapeo colaborativo permiten marcar peligros georreferenciados que alertan a otros usuarios y notifican a las autoridades."
+                }
+            ],
+            lupe: [
+                {
+                    title: "El reparto múltiple",
+                    emoji: "📦",
+                    illustration: "🎁",
+                    context: "Lupe debe entregar tres paquetes en Maipú, Independencia y Ñuñoa antes del mediodía. Tiene tiempo limitado.",
+                    options: [
+                        { text: "Entregarlos en el orden que los sacó de la mochila", correct: false },
+                        { text: "Tirar un dado para decidir hacia dónde ir primero", correct: false },
+                        { text: "Usar una herramienta de ruteo para optimizar el orden de las paradas", correct: true }
+                    ],
+                    successMessage: "¡Excelente decisión! Las herramientas de análisis de redes calculan la ruta más eficiente considerando distancias, tráfico y prioridades. Ahorras tiempo, combustible y reduces emisiones.",
+                    errorMessage: "Sin planificación, podrías dar muchas vueltas innecesarias. El análisis de redes geoespaciales optimiza rutas considerando múltiples variables, ahorrando tiempo y recursos."
+                },
+                {
+                    title: "Día de reciclaje",
+                    emoji: "♻️",
+                    illustration: "🗑️",
+                    context: "Lupe se mudó hace poco y tiene botellas de vidrio y cartones acumulados. No sabe dónde botar su reciclaje en la nueva comuna.",
+                    options: [
+                        { text: "Dejarlo junto al basurero tradicional de la esquina", correct: false },
+                        { text: "Conducir al azar buscando contenedores verdes", correct: false },
+                        { text: "Buscar la capa de 'Puntos Limpios' en el visor territorial del municipio", correct: true }
+                    ],
+                    successMessage: "¡Perfecto! Los mapas temáticos municipales muestran servicios públicos como puntos limpios, consultorios, plazas y más. Los datos geoespaciales locales facilitan el acceso a servicios ciudadanos.",
+                    errorMessage: "Esas opciones son ineficientes o incorrectas. Los visores territoriales municipales tienen capas temáticas con ubicaciones de servicios públicos como puntos de reciclaje."
+                },
+                {
+                    title: "El evento masivo",
+                    emoji: "🏃",
+                    illustration: "🚧",
+                    context: "Lupe debe ir urgente al centro, pero una maratón masiva está bloqueando varias avenidas principales. El tráfico está colapsado.",
+                    options: [
+                        { text: "Cruzar por un hueco entre las vallas de seguridad", correct: false },
+                        { text: "Estacionarse y esperar varias horas a que termine", correct: false },
+                        { text: "Revisar las capas de cortes de tránsito en vivo para trazar un desvío", correct: true }
+                    ],
+                    successMessage: "¡Brillante! Los datos geoespaciales en tiempo real (cortes de calles, tráfico, eventos) te permiten adaptarte dinámicamente. Información actualizada = mejores decisiones sobre la marcha.",
+                    errorMessage: "Esas opciones te harían perder mucho tiempo. Los sistemas de información geográfica en tiempo real muestran cortes de tránsito y eventos, permitiéndote planificar desvíos eficientes."
+                }
+            ]
+        };
+
+        // ESTADO DEL JUEGO
+        let currentCharacter = null;
+        let currentLevel = 0;
+        let challenges = [];
+        let answeredCorrectly = false;
+
+        // FUNCIONES PRINCIPALES
+        function selectCharacter(character) {
+            currentCharacter = character;
+            challenges = gameData[character];
+            currentLevel = 0;
+
+            const emoji = character === 'tito' ? '🚲' : '🛵';
+            const name = character === 'tito' ? 'Tito el Ciclista' : 'Lupe - Misión Express';
+
+            document.getElementById('characterEmoji').textContent = emoji;
+            document.getElementById('characterName').textContent = name;
+            document.getElementById('emoji1').textContent = emoji;
+
+            showScreen('boardScreen');
+            updateBoard();
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function updateBoard() {
+            // Actualizar nodos
+            for (let i = 1; i <= 3; i++) {
+                const node = document.getElementById(`node${i}`);
+                node.classList.remove('active', 'completed', 'locked');
+
+                if (i < currentLevel) {
+                    node.classList.add('completed');
+                    node.innerHTML = '<span class="level-number">✓</span>';
+                } else if (i === currentLevel) {
+                    node.classList.add('active');
+                    const emoji = document.getElementById('characterEmoji').textContent;
+                    node.innerHTML = `<span class="node-emoji">${emoji}</span><span class="level-number">${i}</span>`;
+                } else {
+                    node.classList.add('locked');
+                }
+            }
+
+            // Actualizar nodo final
+            const nodeFinal = document.getElementById('nodeFinal');
+            if (currentLevel >= 3) {
+                nodeFinal.classList.remove('locked');
+                nodeFinal.classList.add('active');
+            }
+
+            // Actualizar línea de progreso
+            const progress = (currentLevel / 3) * 80;
+            document.getElementById('progressLine').style.width = progress + '%';
+        }
+
+        function openChallenge(level) {
+            const node = document.getElementById(`node${level}`);
+            if (node.classList.contains('locked')) return;
+
+            currentLevel = level;
+            answeredCorrectly = false;
+
+            const challenge = challenges[level - 1];
+            
+            document.getElementById('modalEmoji').textContent = document.getElementById('characterEmoji').textContent;
+            document.getElementById('modalTitle').textContent = challenge.title;
+            document.getElementById('illustration').textContent = challenge.illustration;
+            document.getElementById('contextText').textContent = challenge.context;
+
+            // Mezclar opciones aleatoriamente
+            const shuffledOptions = [...challenge.options].sort(() => Math.random() - 0.5);
+            
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+
+            shuffledOptions.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = option.text;
+                btn.onclick = () => checkAnswer(option.correct, challenge);
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('feedback').classList.remove('active', 'success', 'error');
+            document.getElementById('continueBtn').style.display = 'none';
+            document.getElementById('modalOverlay').classList.add('active');
+        }
+
+        function checkAnswer(isCorrect, challenge) {
+            // Deshabilitar botones
+            document.querySelectorAll('.option-btn').forEach(btn => {
+                btn.classList.add('disabled');
+                btn.onclick = null;
+            });
+
+            const feedback = document.getElementById('feedback');
+            feedback.classList.add('active');
+
+            if (isCorrect) {
+                answeredCorrectly = true;
+                feedback.classList.add('success');
+                document.getElementById('feedbackIcon').textContent = '✓';
+                document.getElementById('feedbackTitleText').textContent = '¡Correcto!';
+                document.getElementById('feedbackText').textContent = challenge.successMessage;
+                document.getElementById('continueBtn').style.display = 'block';
+                
+                // Confeti
+                createConfetti();
+            } else {
+                feedback.classList.add('error');
+                document.getElementById('feedbackIcon').textContent = '✗';
+                document.getElementById('feedbackTitleText').textContent = 'Inténtalo de nuevo';
+                document.getElementById('feedbackText').textContent = challenge.errorMessage;
+                
+                // Vibración (si está disponible)
+                if (navigator.vibrate) {
+                    navigator.vibrate(200);
+                }
+                
+                // Reiniciar después de 3 segundos
+                setTimeout(() => {
+                    openChallenge(currentLevel);
+                }, 3000);
+            }
+        }
+
+        function continueGame() {
+            closeModal();
+            
+            if (currentLevel >= 3) {
+                showFinalScreen();
+            } else {
+                currentLevel++;
+                updateBoard();
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+        }
+
+        function showFinalScreen() {
+            const nodeFinal = document.getElementById('nodeFinal');
+            if (nodeFinal.classList.contains('locked')) return;
+
+            showScreen('finalScreen');
+            createConfetti(50);
+        }
+
+        function resetGame() {
+            currentCharacter = null;
+            currentLevel = 0;
+            showScreen('startScreen');
+        }
+
+        function createConfetti(count = 30) {
+            const container = document.querySelector('.game-container');
+            const colors = ['#FF6B35', '#F7931E', '#00C896', '#4A90E2', '#764ba2'];
+            
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                    container.appendChild(confetti);
+                    
+                    setTimeout(() => confetti.remove(), 3000);
+                }, i * 50);
+            }
+        }
+
+        // Cerrar modal con ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
+</body>
+</html>
