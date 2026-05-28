@@ -47,18 +47,7 @@ export default function Board({
         <div className="screen board-screen active">
             <div className="board-header">
                 <div style={{ textAlign: 'left', marginBottom: '1rem' }}>
-                    <button 
-                        onClick={onReset}
-                        style={{
-                            padding: '10px 20px',
-                            background: 'white',
-                            border: '3px solid var(--dark)',
-                            borderRadius: '15px',
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
-                            boxShadow: '3px 3px 0 var(--dark)'
-                        }}
-                    >
+                    <button className="back-btn" onClick={onReset}>
                         ⬅️ Volver al inicio
                     </button>
                 </div>
@@ -67,20 +56,7 @@ export default function Board({
                     <span>{charData.name}</span>
                 </h2>
                 <div style={{ marginTop: '25px' }}>
-                    <p style={{ 
-                        fontSize: '1.4rem', 
-                        fontWeight: '800', 
-                        color: 'var(--dark)', 
-                        backgroundColor: 'white', 
-                        padding: '15px 30px', 
-                        borderRadius: '25px', 
-                        display: 'inline-block', 
-                        border: '4px solid var(--dark)', 
-                        boxShadow: '4px 4px 0 var(--secondary)',
-                        maxWidth: '90%',
-                        lineHeight: '1.4',
-                        animation: 'bounceIn 0.8s ease'
-                    }}>
+                    <p className="board-message">
                         {currentLevel === 0 && `¡Preparados, listos, ya! Toca el círculo saltarín con el número 1 para empezar. 🚀`}
                         {currentLevel === 1 && `¡Genial! Lo hiciste muy bien. Ahora toca el número 2 para seguir la aventura. ⭐`}
                         {currentLevel === 2 && `¡Ya casi llegas a la meta! Toca el número 3 para el último desafío. 🏆`}

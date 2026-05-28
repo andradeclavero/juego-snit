@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { gameData } from './data/gameData';
 import CharacterSelection from './components/CharacterSelection';
 import Board from './components/Board';
@@ -10,6 +10,50 @@ export default function App() {
     const [errorMsg, setErrorMsg] = useState(null);
     const [successMsg, setSuccessMsg] = useState(null);
     const [confetti, setConfetti] = useState([]);
+    const audioRef = useRef(null);
+
+    useEffect(() => {
+        let audioSrc = '';
+        if (!selectedChar) {
+            audioSrc = `${import.meta.env.BASE_URL}00_Seven_Blocks_Away.mp3`;
+        } else if (selectedChar === 'bruno') {
+            audioSrc = `${import.meta.env.BASE_URL}01_The_Correct_Answer.mp3`;
+        } else if (selectedChar === 'olivia') {
+            audioSrc = `${import.meta.env.BASE_URL}02_North_of_the_Save_Point.mp3`;
+        }
+
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+        }
+
+        if (audioSrc) {
+            const audio = new Audio(audioSrc);
+            audio.loop = true;
+            audio.volume = 0.4;
+            audioRef.current = audio;
+            
+            audio.play().catch(e => console.log('Autoplay prevented:', e));
+        }
+
+        return () => {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current = null;
+            }
+        };
+    }, [selectedChar]);
+
+    // Intentar reproducir si el usuario interactúa (por políticas de autoplay)
+    useEffect(() => {
+        const handleInteraction = () => {
+            if (audioRef.current && audioRef.current.paused) {
+                audioRef.current.play().catch(() => {});
+            }
+        };
+        document.addEventListener('click', handleInteraction);
+        return () => document.removeEventListener('click', handleInteraction);
+    }, []);
 
     const handleNodeClick = (index) => {
         if (index === currentLevel && index < 3) {
